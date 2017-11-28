@@ -40,7 +40,8 @@ public class BTree {
         nodeCount = 1;
     }
 
-    public NodeIndexPair search(BNode x, String key) throws IOException { //O(t logt n)
+    //======================================================
+    public static NodeIndexPair search(BNode x, String key) throws IOException { //O(t logt n)
         int i = 0;
         while (i < x.numOfCurrentKeys && (key.compareTo(x.keys[i]) > 0)) { //key > x.keys
             ++i;
@@ -57,6 +58,24 @@ public class BTree {
         }
     }
 
+    //======================================================
+    public static Boolean searchReturnBool(BNode x, String key) throws IOException { //O(t logt n)
+        int i = 0;
+        while (i < x.numOfCurrentKeys && (key.compareTo(x.keys[i]) > 0)) { //key > x.keys
+            ++i;
+        }
+        if (i < x.numOfCurrentKeys && key.equals(x.keys[i])) {
+            return true;
+        } else if (x.isLeaf == 1) {
+            return false;
+        } else {
+            BNode p = new BNode(childNum);
+            p.readNode(x.children[i]);
+            return searchReturnBool(p, key);
+        }
+    }
+
+    //======================================================
     public static void insert(String k) throws IOException {
         BNode r = root;
         if (r.numOfCurrentKeys == 2*t-1) {

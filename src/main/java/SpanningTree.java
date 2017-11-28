@@ -1,7 +1,7 @@
 public class SpanningTree {
+    WebsiteNode root;
 
-
-    public void findConnections(String url, BTree btree) {
-
+    SpanningTree (WebsiteNode n) {
+        root = n;
     }
 }

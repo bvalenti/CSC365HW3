@@ -2,11 +2,11 @@ import java.util.ArrayList;
 
 public class WebsiteNode {
     String url;
-    FrequencyTable frequencyTable;
-    ArrayList<String> connections = new ArrayList<>();
+    ArrayList<MyConnection> connections = new ArrayList<>();
+    ArrayList<WebsiteNode> spanningTreeConnections = new ArrayList<>();
+    WebsiteNode parent;
+    long marker;
+    boolean visited;
 
-    public void findConnections(BNode root) {
-        
-
-    }
+    public WebsiteNode() {}
 }
