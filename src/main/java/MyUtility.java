@@ -356,91 +356,61 @@ public class MyUtility {
         if (fetchType.equals("most similar")) {
             HTMLParser urlParser = new HTMLParser();
             FrequencyTable urlFreq = urlParser.parseURL(url);
-
-            //Entry point for the full B-Tree traversal.
-            leftMost(e,urlFreq,lock,fetchType);
+            findMostSimilar(e,urlFreq,lock);
             return simKey;
         } else {
-            //Entry point for the full B-Tree traversal.
-            leftMost(e,null,lock,fetchType);
-
+            findOldestFile(e);
             return fileKeyLastModified;
         }
     }
 
-    /*
-    Calculates cosine similarity for all node keys and the given url key and keeps the most similar.
-    */
-    public void compareNodeKeys(BNode e, FrequencyTable freq, Object lock, String fetchType) throws IOException, ClassNotFoundException {
-        if (fetchType.equals("most similar")) {
-            double simTmp;
-            FrequencyTable tmpFreq;
-            for (int i = 0; i < e.keys.length; i++) {
-                if (e.keys[i] != null) {
-                    synchronized (lock) {
-                        tmpFreq = getFrequencyTable(e.keys[i]);
-                    }
-                    simTmp = cosineSimMetric(tmpFreq, freq);
-                    if (simTmp > sim) {
-                        sim = simTmp;
-                        simKey = e.keys[i];
-                    }
-                }
+    public void findMostSimilar(BNode r, FrequencyTable urlFreq, Object lock) throws IOException, ClassNotFoundException {
+        BNode e;
+
+        for (int i = 0; i < r.children.length; i++) {
+            if (r.children[i] != 0) {
+                e = new BNode(8);
+                e.readNode(r.children[i]);
+                findMostSimilar(e, urlFreq, lock);
             }
-        } else if (fetchType.equals("oldest file")) {
-            for (int i = 0; i < e.keys.length; i++) {
-                if (e.keys[i] != null) {
-                    Path a = getFilePath(e.keys[i]);
-                    File file = a.toFile();
-                    if (file.lastModified() < lastModified) {
-                        lastModified = file.lastModified();
-                        fileKeyLastModified = e.keys[i];
-                        fileLastModified = file;
-                    }
+        }
+
+        double simTmp;
+        FrequencyTable tmpFreq;
+        for (int i = 0; i < r.keys.length; i++) {
+            if (r.keys[i] != null) {
+                synchronized (lock) {
+                    tmpFreq = getFrequencyTable(r.keys[i]);
+                }
+                simTmp = cosineSimMetric(tmpFreq, urlFreq);
+                if (simTmp > sim) {
+                    sim = simTmp;
+                    simKey = r.keys[i];
                 }
             }
         }
     }
 
-    /*
-    Goes to the left most node with respect to the input node.
-    */
-    public void leftMost(BNode e, FrequencyTable urlFreq, Object lock, String fetchType) throws IOException, ClassNotFoundException {
-        long tmpChild = 0;
-        while (e.children[0] != 0) {
-            e.usedForBreadthSearching++;
-            e.writeNode();
-            tmpChild = e.children[0];
-            e = new BNode(BTree.childNum);
-            e.readNode(tmpChild);
+    public void findOldestFile(BNode r) throws IOException, ClassNotFoundException {
+        BNode e;
+
+        for (int i = 0; i < r.children.length; i++) {
+            if (r.children[i] != 0) {
+                e = new BNode(8);
+                e.readNode(r.children[i]);
+                findOldestFile(e);
+            }
         }
-        compareNodeKeys(e, urlFreq, lock, fetchType);
-        moveToParent(e, urlFreq, lock, fetchType);
-    }
 
-    /*
-    Move up to parent node. Calls leftMost if not all children nodes have been traversed yet.
-    Otherwise, does cosine comparison of key frequency tables to given url and calls itself if not already at root node.
-    */
-    public void moveToParent(BNode e, FrequencyTable urlFreq, Object lock, String fetchType) throws IOException, ClassNotFoundException {
-        long tmpParent = e.parent;
-        long tmpChild;
-        e = new BNode(BTree.childNum);
-        e.readNode(tmpParent);
-
-        if ((e.usedForBreadthSearching != e.children.length) && (e.children[e.usedForBreadthSearching] != 0)) {
-            tmpChild = e.children[e.usedForBreadthSearching];
-            e.usedForBreadthSearching++;
-            e.writeNode();
-            e = new BNode(BTree.childNum);
-            e.readNode(tmpChild);
-            leftMost(e, urlFreq, lock, fetchType);
-        } else {
-            compareNodeKeys(e, urlFreq, lock, fetchType);
-            e.usedForBreadthSearching = 0;
-            e.writeNode();
-            if (e.id != rootId) {
-                moveToParent(e, urlFreq, lock, fetchType);
+        for (int i = 0; i < r.keys.length; i++) {
+            if (r.keys[i] != null) {
+                Path a = getFilePath(r.keys[i]);
+                File file = a.toFile();
+                if (file.lastModified() < lastModified) {
+                    lastModified = file.lastModified();
+                    fileKeyLastModified = r.keys[i];
+                    fileLastModified = file;
+                }
             }
         }
     }
