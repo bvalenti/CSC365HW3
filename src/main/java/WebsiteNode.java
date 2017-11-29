@@ -7,6 +7,7 @@ public class WebsiteNode {
     WebsiteNode parent;
     long marker;
     boolean visited;
+    double distance;
 
     public WebsiteNode() {}
 }

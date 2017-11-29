@@ -84,9 +84,117 @@ public class Graph {
     }
 
     //===================================================
+    public Path findNearestClusterCenter(String src) throws IOException {
+        ArrayList<String> clusterCenters = new ArrayList<>();
+        ArrayList<Path> paths = new ArrayList<>();
+        MyUtility utl = new MyUtility();
+        Medoid medoids[] = utl.readClusters(new Object());
+        Path shortestPath = new Path();
+//        double totalDistances[] = new double[10];
+
+        WebsiteNode userSelected = new WebsiteNode();
+        userSelected.url = src;
+        userSelected.connections = nodes.get(src);
+        SpanningTree shortestPathTree = new SpanningTree(userSelected);
+//        shortestPath.pathLength = Double.MAX_VALUE;
+
+        //Use dijkstra's algorithm to find the shortest path spanning tree with the selected
+        // Website as the root node
+        shortestPathTree = dijkstra(shortestPathTree);
+
+        for (Medoid m : medoids) {
+            if (shortestPathTree.contains(m.key)) {
+                clusterCenters.add(m.key);
+            }
+        }
+
+        if (clusterCenters.size() != 0) {
+            double totalDistance = Double.MAX_VALUE;
+            WebsiteNode clusterCenter;
+            WebsiteNode nearestClusterCenter = new WebsiteNode();
+
+            for (String key : clusterCenters) {
+                clusterCenter = shortestPathTree.get(key);
+                if (clusterCenter.distance < totalDistance) {
+                    nearestClusterCenter = clusterCenter;
+                    totalDistance = clusterCenter.distance;
+                }
+            }
+            shortestPath.src = userSelected;
+            shortestPath.dst = nearestClusterCenter;
+            shortestPath.pathLength = totalDistance;
+            return shortestPath;
+        } else {
+            System.out.println("No cluster center in spanning tree.");
+            return null;
+        }
+    }
+
+    //===================================================
+    private SpanningTree dijkstra(SpanningTree spanningTree) {
+        ArrayList<WebsiteNode> arr = new ArrayList<>();
+        PriorityQueue<MyConnection> pq = new PriorityQueue(new CompareByDistance());
+        MyConnection mc;
+        WebsiteNode webNode;
+        ArrayList<String> visited = new ArrayList<>();
+        ArrayList<MyConnection> toRemove = new ArrayList<>();
+        double newDist;
+
+        webNode = spanningTree.root;
+        webNode.distance = 0;
+        for (int i = 0; i < webNode.connections.size(); i++) {
+            webNode.connections.get(i).distance = webNode.distance + (1 - webNode.connections.get(i).weight);
+        }
+        pq.addAll(spanningTree.root.connections);
+        spanningTree.root.visited = true;
+        arr.add(spanningTree.root);
+        visited.add(spanningTree.root.url);
+
+        while (!pq.isEmpty()) {
+            mc = pq.remove();
+            webNode = new WebsiteNode();
+            webNode.url = mc.url;
+            webNode.connections = nodes.get(mc.url);
+            webNode.distance = mc.distance;
+            webNode.visited = true;
+
+            for (int i = 0; i < arr.size(); i++) {
+                if (mc.parent.equals(arr.get(i).url)) {
+                    arr.get(i).spanningTreeConnections.add(webNode);
+                    break;
+                }
+            }
+            arr.add(webNode);
+            visited.add(webNode.url);
+
+            //Remove MyConnections pointing to WebNodes that have already been visited.
+            Iterator it = pq.iterator();
+            while(it.hasNext()) {
+                MyConnection m = (MyConnection) it.next();
+                if (visited.contains(m.url)) {
+                    toRemove.add(m);
+                }
+            }
+            pq.removeAll(toRemove);
+
+            //Add new MyConnections to the priority queue that point to WebNodes that haven't been visited yet.
+            for (MyConnection con : webNode.connections) {
+                if (!visited.contains(con.url)) {
+                    newDist = webNode.distance + (1 - con.weight);
+                    if (newDist < con.distance) {
+                        con.distance = newDist;
+                    }
+                    pq.add(con);
+                }
+            }
+        }
+        return spanningTree;
+    }
+
+    //===================================================
     public SpanningTree prim(SpanningTree spanningTree) {
         ArrayList<WebsiteNode> arr = new ArrayList<>();
-        PriorityQueue<MyConnection> pq = new PriorityQueue(new CompareByWeight());
+        PriorityQueue<MyConnection> pq = new PriorityQueue(new CompareByDistance());
         MyConnection mc;
         WebsiteNode webNode;
         ArrayList<String> visited = new ArrayList<>();
@@ -177,6 +285,22 @@ class CompareByWeight implements Comparator<MyConnection> {
     public int compare(MyConnection a, MyConnection b) {
         int out;
         double cmp = a.weight - b.weight;
+        if (cmp > 0) {
+            out = 1;
+        } else if (cmp < 0) {
+            out = -1;
+        } else {
+            out = 0;
+        }
+        return out;
+    }
+}
+
+class CompareByDistance implements Comparator<MyConnection> {
+
+    public int compare(MyConnection a, MyConnection b) {
+        int out;
+        double cmp = a.distance - b.distance;
         if (cmp > 0) {
             out = 1;
         } else if (cmp < 0) {
