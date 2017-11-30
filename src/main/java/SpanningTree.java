@@ -34,8 +34,9 @@ public class SpanningTree {
             }
         }
         for (int i = 0; i < node.spanningTreeConnections.size(); i++) {
-            if (search(url,node.spanningTreeConnections.get(i))) {
-                return node.spanningTreeConnections.get(i);
+            WebsiteNode out = getNode(url, node.spanningTreeConnections.get(i));
+            if (out != null) {
+                return out;
             }
         }
         return null;

@@ -19,26 +19,29 @@ public class MyURLs {
     String urlPath = "C:\\CSC365HW3_BTree\\myURLs.ser";
     MyURL URLS[] = new MyURL[10];
 
-    private static MyURLs instance;
-    static {
-        try {
-            instance = new MyURLs();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    private static MyURLs instance;
+//    static {
+//        try {
+//            instance = new MyURLs();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
-    private MyURLs() throws IOException {
+    public MyURLs() throws IOException {
         initURLs();
     }
 
-    public static MyURLs getInstance() {
-        return instance;
-    }
+//    public static MyURLs getInstance() {
+//        return instance;
+//    }
 
     //===========================================
     public void initURLs() {
         scrapedURLS = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            URLS[i] = new MyURL();
+        }
         URLS[0].url = "https://en.wikipedia.org/wiki/Oswego,_New_York";
         URLS[1].url = "https://en.wikipedia.org/wiki/Japanese_language";
         URLS[2].url = "https://en.wikipedia.org/wiki/Airplane";
@@ -69,14 +72,22 @@ public class MyURLs {
         ScrapeReturn scrapeReturn = new ScrapeReturn(doc,url);
 
         for (int i = 0; i < 99; i++) {
+
             links = scrapeReturn.doc.select("a[href]");
             scrapeReturn = recurseScrape(root, links, scrapeReturn.parentURL);
+            if (scrapeReturn == null) {
+                --i;
+                MyURL tmp = scrapedURLS.get(ThreadLocalRandom.current().nextInt(1,scrapedURLS.size()-1));
+                scrapeReturn.parentURL = tmp.parentURL;
+                scrapeReturn.doc = Jsoup.connect(tmp.url).get();
+                System.out.println("Reset");
+            }
         }
     }
 
     //===========================================
     public ScrapeReturn recurseScrape(Document root, Elements links, String urlParent) {
-        int a;
+        int a, count = 0;
         MyURL newURL;
         Document doc;
 
@@ -94,8 +105,11 @@ public class MyURLs {
                     && !links.get(a).attr("abs:href").contains(".jpg")
                     && !links.get(a).attr("abs:href").contains(".MP3")
                     && !links.get(a).attr("abs:href").contains(".zip")
+                    && !links.get(a).attr("abs:href").contains("?")
                     && checkAscII(links.get(a).attr("abs:href"))
-                    && !scrapedURLS.contains(links.get(a).attr("abs:href"))) {
+                    && !links.get(a).attr("abs:href").contains("#")
+                    && !scrapedURLSContains(links.get(a).attr("abs:href") + "/")
+                    && !scrapedURLSContains(links.get(a).attr("abs:href"))) {
                 try {
                     System.out.println(links.get(a).attr("abs:href"));
                     doc = Jsoup.connect(links.get(a).attr("abs:href")).get();
@@ -107,8 +121,22 @@ public class MyURLs {
                     return recurseScrape(root, links, root.nodeName());
                 }
             }
+            count++;
+            if (count > 100) {
+                return null;
+            }
         }
         return new ScrapeReturn(doc,links.get(a).attr("abs:href"));
+    }
+
+    //===========================================
+    public boolean scrapedURLSContains(String str) {
+        for (MyURL URL : scrapedURLS) {
+            if (URL.url.equals(str)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     //===========================================

@@ -1,4 +1,3 @@
-import com.sun.jmx.remote.internal.ArrayQueue;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -20,59 +19,44 @@ public class Graph {
     }
 
     //======================================================
-    public void findConnections(BNode r) throws IOException, ClassNotFoundException {
+    public void findConnections(BNode r, int count) throws IOException, ClassNotFoundException {
         BNode e;
         Document doc;
         Elements links;
         MyUtility utl = new MyUtility();
 
-        if (r.isLeaf == 1) {
-            for (int i = 0; i < r.keys.length; i++) {
+        for (int i = 0; i < r.children.length; i++) {
+            if (r.children[i] != 0) {
+                e = new BNode(8);
+                e.readNode(r.children[i]);
+                findConnections(e, count);
+            }
+        }
+
+        for (int i = 0; i < r.keys.length; i++) {
+            if (r.keys[i] != null) {
                 ArrayList<MyConnection> cons = new ArrayList<>();
                 doc = Jsoup.connect(r.keys[i]).get();
                 links = doc.select("a[href]");
                 for (Element element : links) {
-                    if (BTree.searchReturnBool(root,element.attr("abs:href"))) {
+                    if (BTree.searchReturnBool(root, element.attr("abs:href"))) {
                         MyConnection mc = new MyConnection();
 
                         FrequencyTable c1 = utl.getFrequencyTable(element.attr("abs:href"));
                         FrequencyTable c2 = utl.getFrequencyTable(r.keys[i]);
 
-                        mc.weight = utl.cosineSimMetric(c1,c2);
+                        mc.weight = utl.cosineSimMetric(c1, c2);
                         mc.url = element.attr("abs:href");
                         mc.parent = r.keys[i];
                         cons.add(mc);
                     }
                 }
+                System.out.println(r.keys[i]);
+//                for (MyConnection con : cons) {
+//                    System.out.println(con.url);
+//                }
                 nodes.put(r.keys[i],cons);
             }
-            return;
-        }
-
-        for (int i = 0; i < r.children.length; i++) {
-            e = new BNode(8);
-            e.readNode(r.children[i]);
-            findConnections(e);
-        }
-
-        for (int i = 0; i < r.keys.length; i++) {
-            ArrayList<MyConnection> cons = new ArrayList<>();
-            doc = Jsoup.connect(r.keys[i]).get();
-            links = doc.select("a[href]");
-            for (Element element : links) {
-                if (BTree.searchReturnBool(root,element.attr("abs:href"))) {
-                    MyConnection mc = new MyConnection();
-
-                    FrequencyTable c1 = utl.getFrequencyTable(element.attr("abs:href"));
-                    FrequencyTable c2 = utl.getFrequencyTable(r.keys[i]);
-
-                    mc.weight = utl.cosineSimMetric(c1,c2);
-                    mc.url = element.attr("abs:href");
-                    mc.parent = r.keys[i];
-                    cons.add(mc);
-                }
-            }
-            nodes.put(r.keys[i],cons);
         }
     }
 
@@ -103,6 +87,7 @@ public class Graph {
         shortestPathTree = dijkstra(shortestPathTree);
 
         for (Medoid m : medoids) {
+//            System.out.println(m.key);
             if (shortestPathTree.contains(m.key)) {
                 clusterCenters.add(m.key);
             }
@@ -114,12 +99,17 @@ public class Graph {
             WebsiteNode nearestClusterCenter = new WebsiteNode();
 
             for (String key : clusterCenters) {
+                System.out.println(key);
                 clusterCenter = shortestPathTree.get(key);
+                System.out.println(clusterCenter.url);
+//                System.out.println(clusterCenter.distance);
                 if (clusterCenter.distance < totalDistance) {
                     nearestClusterCenter = clusterCenter;
                     totalDistance = clusterCenter.distance;
                 }
             }
+            System.out.println("The closest cluster is: ");
+            System.out.println(nearestClusterCenter.url);
             shortestPath.src = userSelected;
             shortestPath.dst = nearestClusterCenter;
             shortestPath.pathLength = totalDistance;
@@ -264,14 +254,14 @@ public class Graph {
 //    }
 
     //======================================================
-    public void writeConnections() throws IOException {
+    public void writeNodes() throws IOException {
         FileOutputStream fos = new FileOutputStream("graphNodes.ser");
         ObjectOutputStream oos = new ObjectOutputStream(fos);
         oos.writeObject(nodes);
         oos.close();
         fos.close();
     }
-    public void readConnections() throws IOException, ClassNotFoundException {
+    public void readNodes() throws IOException, ClassNotFoundException {
         FileInputStream fis = new FileInputStream("graphNodes.ser");
         ObjectInputStream ois = new ObjectInputStream(fis);
         nodes = (HashMap) ois.readObject();

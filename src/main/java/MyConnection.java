@@ -1,4 +1,6 @@
-public class MyConnection {
+import java.io.Serializable;
+
+public class MyConnection implements Serializable {
     String url;
     Double weight;
     String parent;

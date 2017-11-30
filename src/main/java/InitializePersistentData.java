@@ -8,7 +8,8 @@ public class InitializePersistentData {
 
     public static void main(String args[]) throws IOException, ClassNotFoundException {
         MyUtility utl = MyUtility.getInstance();
-        MyURLs urls = MyURLs.getInstance();
+//        MyURLs urls = MyURLs.getInstance();
+        MyURLs urls = new MyURLs();
         urls.scrape();
         HTMLParser parser = new HTMLParser();
         FrequencyTable tmp;
@@ -36,9 +37,10 @@ public class InitializePersistentData {
             rf.close();
 
             //Create the B-Tree
-            BTree btree = BTree.getInstance();
+//            BTree btree = BTree.getInstance();
+            BTree btree = new BTree(8,true);
             for (int i = 0; i < urls.scrapedURLS.size(); i++) {
-                BTree.insert(urls.scrapedURLS.get(i).url);
+                btree.insert(urls.scrapedURLS.get(i).url);
             }
 
             //Create and persist the frequency tables
@@ -81,32 +83,32 @@ public class InitializePersistentData {
             f2.close();
             rf1.close();
 
-            // BTree btree = BTree.getInstance();
-            BTree btree = BTree.getInstance();
+//            BTree btree = BTree.getInstance();
+            BTree btree = new BTree(8, true);
             for (int i = 0; i < 1000; i++) {
                 btree.insert(urlss[i]);
             }
 
             // Create and persist the frequency tables
-            for (int i = 0; i < urlss.length; i++) {
-                if (urlss[i].endsWith("/")) {
-                    url = urlss[i].substring(0,urlss[i].length()-1);
-                    url = url.replace("//"," ").replace("/"," ").replace(":","").replace("<","").replace(">","").replace("*","").replace("?","");
-                } else {
-                    url = urlss[i].replace("//"," ").replace("/"," ").replace(":","").replace("<","").replace(">","").replace("*","").replace("?","");
-                }
-                url = url + ".ser";
-                Path p = Paths.get(urls.path, url);
-                File file = p.toFile();
-
-                System.out.println(url);
-                f = new FileOutputStream(file);
-                os = new ObjectOutputStream(f);
-                tmp = parser.parseURL(urlss[i]);
-                tmp.frequencies.writeObject(os);
-                os.close();
-                f.close();
-            }
+//            for (int i = 0; i < urlss.length; i++) {
+//                if (urlss[i].endsWith("/")) {
+//                    url = urlss[i].substring(0,urlss[i].length()-1);
+//                    url = url.replace("//"," ").replace("/"," ").replace(":","").replace("<","").replace(">","").replace("*","").replace("?","");
+//                } else {
+//                    url = urlss[i].replace("//"," ").replace("/"," ").replace(":","").replace("<","").replace(">","").replace("*","").replace("?","");
+//                }
+//                url = url + ".ser";
+//                Path p = Paths.get(urls.path, url);
+//                File file = p.toFile();
+//
+//                System.out.println(url);
+//                f = new FileOutputStream(file);
+//                os = new ObjectOutputStream(f);
+//                tmp = parser.parseURL(urlss[i]);
+//                tmp.frequencies.writeObject(os);
+//                os.close();
+//                f.close();
+//            }
         }
 
         // Find the cluster medoids and cache the keys in a file.

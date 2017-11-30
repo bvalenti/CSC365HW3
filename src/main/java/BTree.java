@@ -21,23 +21,25 @@ public class BTree {
     static int nodeCount;
     static BNode root = null;
 
-    private static BTree instance;
-    static {
-        try {
-            instance = new BTree(8);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    private static BTree instance;
+//    static {
+//        try {
+//            instance = new BTree(8,true);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
-    private BTree(int k) throws IOException {
+    public BTree(int k, boolean write) throws IOException {
         BNode x = new BNode(k);
         x.id = 1;
         x.isLeaf = 1;
         x.numOfCurrentKeys = 0;
-        x.writeNode();
         root = x;
         nodeCount = 1;
+        if (write) {
+            x.writeNode();
+        }
     }
 
     //======================================================
@@ -169,6 +171,24 @@ public class BTree {
         x.writeNode();
     }
 
+    public static void printTree(BNode r) throws IOException {
+            BNode e;
+
+            for (int i = 0; i < r.children.length; i++) {
+                if (r.children[i] != 0) {
+                    e = new BNode(8);
+                    e.readNode(r.children[i]);
+                    printTree(e);
+                }
+            }
+
+            for (int i = 0; i < r.keys.length; i++) {
+                if (r.keys[i] != null) {
+                    System.out.println(r.keys[i]);
+                }
+            }
+    }
+
     public static void cacheRootID(long rootID) throws IOException {
         RandomAccessFile raf = new RandomAccessFile(BTree.RootIDPath, "rw");
         FileChannel ff = raf.getChannel();
@@ -182,7 +202,7 @@ public class BTree {
         raf.close();
     }
 
-    public static BTree getInstance() { return instance; }
+//    public static BTree getInstance() { return instance; }
 
     public static long readRootId() throws IOException {
         RandomAccessFile raf = new RandomAccessFile(BTree.RootIDPath, "rw");

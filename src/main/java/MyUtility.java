@@ -146,7 +146,8 @@ public class MyUtility {
     for quick retrieval.
      */
     public void cacheClusters() throws IOException, ClassNotFoundException {
-        MyURLs initUrls = MyURLs.getInstance();
+//        MyURLs initUrls = MyURLs.getInstance();
+        MyURLs initUrls = new MyURLs();
         nodeCount = getNodeCount();
         String tmpUrl;
         FrequencyTable freq;
@@ -164,8 +165,10 @@ public class MyUtility {
             System.out.println(cosineSimMetric(medoids[i].medoidFrequencies,medoids[i].medoidFrequencies));
         }
 
-        for (int iteration = 0; iteration < 1000; iteration++) { //update medoids for 1000 times or break
+        for (int iteration = 0; iteration < 25; iteration++) { //update medoids for 1000 times or break
+            System.out.println(iteration);
             medoids = associate(medoids);
+
             for (int i = 0; i < medoids.length; i++) {
                 medoids[i].cost = calcCost(medoids[i]);
             }
@@ -173,7 +176,7 @@ public class MyUtility {
 
             if (updatedMedoids != null) {
                 medoids = updatedMedoids;
-            } else {
+            } else if (iteration > 5) {
                 break;
             }
         }
@@ -205,7 +208,9 @@ public class MyUtility {
         int index = 0;
         String key;
 
-        for (int i = 1; i <= nodeCount; i++) {
+//        recurseAssociate(meds);
+
+        for (int i = 1; i <= 250; i++) {
             BNode tmp = new BNode(BTree.childNum);
             tmp.readNode(i);
             for (int j = 0; j < BTree.childNum-2; j++) {
@@ -226,6 +231,11 @@ public class MyUtility {
                 }
             }
         }
+        return meds;
+    }
+
+    public Medoid[] recurseAssociate(Medoid meds[]) {
+
         return meds;
     }
 

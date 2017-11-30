@@ -2,7 +2,9 @@ public class MyURL {
     String url;
     String parentURL;
 
-    MyURL(String u, String p) {
+    public MyURL() {}
+
+    public MyURL(String u, String p) {
         url = u;
         parentURL = p;
     }
