@@ -28,15 +28,15 @@ public class SpanningTreePrinter extends JPanel {
                     graphRow.add(n);
                 }
             }
-            int spacing = getWidth()/graphRow.size();
+            int horizontalSpacing = getWidth()/graphRow.size();
+            int verticalSpacing = getHeight()/maxLayer;
             if (graphRow.size() % 2 == 0) {
                 for (int j = (0-graphRow.size()/2); j < graphRow.size()/2; j++) {
-//                    g.fillRect(center + j*spacing + spacing/2,100 + i*100,25,25);
-                    g.drawRect(center + j*spacing + spacing/2,100 + i*100,25,25);
+                    g.drawRect(center + j*horizontalSpacing + horizontalSpacing/2 - 10,10 + i*verticalSpacing,10,10);
                 }
             } else {
                 for (int j = (0-graphRow.size()/2); j <= graphRow.size()/2; j++) {
-                    g.drawRect(center + j*spacing,100 + i*100,25,25);
+                    g.drawRect(center + j*horizontalSpacing - 10,10 + i*verticalSpacing,10,10);
                 }
             }
         }
@@ -45,12 +45,10 @@ public class SpanningTreePrinter extends JPanel {
     public void recursePaint(WebsiteNode node, int layer) {
         layer++;
         for (int i = 0; i < node.spanningTreeConnections.size(); i++) {
-            WebsiteNode e = new WebsiteNode();
-            e.connections = currentGraph.nodes.get(node.connections.get(i));
+            WebsiteNode e = node.spanningTreeConnections.get(i);
             recursePaint(e,layer);
         }
         PlottingNode pnode = new PlottingNode(node,layer);
-
         toPlot.add(pnode);
     }
 

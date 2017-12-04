@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainGUI extends javax.swing.JFrame {
+public class Assignment2_GUI extends javax.swing.JFrame {
     GridBagConstraints gbc;
     BNode root;
     int nodeCount;
@@ -17,7 +17,7 @@ public class MainGUI extends javax.swing.JFrame {
     static String BTreePath = "C:\\CSC365HW3_BTree\\btree.ser";
     static String RootIDPath = "C:\\CSC365HW3_BTree\\rootID.ser";
 
-    public MainGUI() throws IOException {}
+    public Assignment2_GUI() throws IOException {}
 
     @SuppressWarnings("unchecked")
     private void initComponents() { }
@@ -164,9 +164,9 @@ public class MainGUI extends javax.swing.JFrame {
 
         EventQueue.invokeLater(new Runnable() {
             public void run() {
-                MainGUI frame = null;
+                Assignment2_GUI frame = null;
                 try {
-                    frame = new MainGUI();
+                    frame = new Assignment2_GUI();
                     frame.addComponents(frame.getContentPane());
                 } catch (IOException e) {
                     e.printStackTrace();

@@ -177,21 +177,19 @@ public class BTree {
     }
 
     public static void printTree(BNode r) throws IOException {
-            BNode e;
-
-            for (int i = 0; i < r.children.length; i++) {
-                if (r.children[i] != 0) {
-                    e = new BNode(8);
-                    e.readNode(r.children[i]);
-                    printTree(e);
-                }
+        BNode e;
+        for (int i = 0; i < r.children.length; i++) {
+            if (r.children[i] != 0) {
+                e = new BNode(8);
+                e.readNode(r.children[i]);
+                printTree(e);
             }
-
-            for (int i = 0; i < r.keys.length; i++) {
-                if (r.keys[i] != null) {
-                    System.out.println(r.keys[i]);
-                }
+        }
+        for (int i = 0; i < r.keys.length; i++) {
+            if (r.keys[i] != null) {
+                System.out.println(r.keys[i]);
             }
+        }
     }
 
     public static void cacheRootID(long rootID) throws IOException {

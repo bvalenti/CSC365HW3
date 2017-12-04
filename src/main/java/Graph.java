@@ -145,6 +145,11 @@ public class Graph {
         for (int i = 0; i < webNode.connections.size(); i++) {
             webNode.connections.get(i).distance = webNode.distance + (1 - webNode.connections.get(i).weight);
         }
+        for (MyConnection con : spanningTree.root.connections) {
+            System.out.println(con.url);
+            System.out.println(con.parent);
+
+        }
         pq.addAll(spanningTree.root.connections);
         spanningTree.root.visited = true;
         arr.add(spanningTree.root);
