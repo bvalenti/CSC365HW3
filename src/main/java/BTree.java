@@ -7,10 +7,15 @@ readRootID() which returns a file pointer (long). Multiplying the pointer by the
 yield the location in the file for the start of a given node.
 */
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import org.jsoup.Jsoup;
+
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class BTree {
     static String BTreePath = "C:\\CSC365HW3_BTree\\btree.ser";
@@ -214,5 +219,55 @@ public class BTree {
         ff.close();
         raf.close();
         return out;
+    }
+
+    //Method that checks each url in the B-Tree for an associated website. If the webpage is no longer available, the
+    //outdated url is replaced with a url whose parent is a randomly chosen url contained in the B-Tree.
+    public static void validateAndUpdateUrls(BNode r) throws IOException {
+        BNode e;
+        MyURLs urls = new MyURLs(false);
+        MyUtility utl = new MyUtility();
+        HTMLParser parser = new HTMLParser();
+        FrequencyTable tmp;
+
+        for (int i = 0; i < r.children.length; i++) {
+            if (r.children[i] != 0) {
+                e = new BNode(8);
+                e.readNode(r.children[i]);
+                validateAndUpdateUrls(e);
+            }
+        }
+
+        for (int i = 0; i < r.keys.length; i++) {
+            if (r.keys[i] != null) {
+                try {
+                    Jsoup.connect(r.keys[i]).get();
+                    System.out.println(r.keys[i]);
+                } catch (IOException excpt) {
+                    System.out.println("Caught exception for url: " + r.keys[i]);
+                    int a = ThreadLocalRandom.current().nextInt(0,r.numOfCurrentKeys-1);
+                    while (a == i) {
+                        a = ThreadLocalRandom.current().nextInt(0,r.numOfCurrentKeys-1);
+                    }
+                    urls.scrapeForURLS(r.keys[a],1);
+                    r.keys[i] = urls.scrapedURLS.get(0).url;
+                    r.writeNode();
+
+                    //Delete the old file.
+                    java.nio.file.Path path = Paths.get(Path + r.keys[i]);
+                    Files.delete(path);
+
+                    Path filePath = utl.getFilePath(r.keys[a]);
+                    File file = filePath.toFile();
+
+                    FileOutputStream f = new FileOutputStream(file);
+                    ObjectOutputStream os = new ObjectOutputStream(f);
+                    tmp = parser.parseURL(urls.scrapedURLS.get(i).url);
+                    tmp.frequencies.writeObject(os);
+                    os.close();
+                    f.close();
+                }
+            }
+        }
     }
 }

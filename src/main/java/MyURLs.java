@@ -1,5 +1,6 @@
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
@@ -28,8 +29,10 @@ public class MyURLs {
 //        }
 //    }
 
-    public MyURLs() throws IOException {
-        initURLs();
+    public MyURLs(boolean init) throws IOException {
+        if (init) {
+            initURLs();
+        }
     }
 
 //    public static MyURLs getInstance() {
@@ -59,26 +62,30 @@ public class MyURLs {
         for (int i = 0; i < URLS.length; i++) {
             System.out.println(URLS[i]);
             scrapedURLS.add(URLS[i]);
-            scrapeForURLS(URLS[i].url);
+            scrapeForURLS(URLS[i].url,99);
         }
     }
 
     //===========================================
-    public void scrapeForURLS(String url) throws IOException {
+    public void scrapeForURLS(String url, int num) throws IOException {
         Document doc = Jsoup.connect(url).get();
         System.out.println(doc.nodeName());
         Document root = doc;
         Elements links;
         ScrapeReturn scrapeReturn = new ScrapeReturn(doc,url);
 
-        for (int i = 0; i < 99; i++) {
+        for (int i = 0; i < num; i++) {
 
             links = scrapeReturn.doc.select("a[href]");
-            scrapeReturn = recurseScrape(root, links, scrapeReturn.parentURL);
+//            scrapeReturn = recurseScrape(root, links, scrapeReturn.parentURL);
+            scrapeReturn = recurseScrape(root, links);
             if (scrapeReturn == null) {
                 --i;
                 MyURL tmp = scrapedURLS.get(ThreadLocalRandom.current().nextInt(1,scrapedURLS.size()-1));
-                scrapeReturn.parentURL = tmp.parentURL;
+                while (tmp == null) {
+                    tmp = scrapedURLS.get(ThreadLocalRandom.current().nextInt(1,scrapedURLS.size()-1));
+                }
+//                scrapeReturn.parentURL = tmp.parentURL;
                 scrapeReturn.doc = Jsoup.connect(tmp.url).get();
                 System.out.println("Reset");
             }
@@ -86,7 +93,7 @@ public class MyURLs {
     }
 
     //===========================================
-    public ScrapeReturn recurseScrape(Document root, Elements links, String urlParent) {
+    public ScrapeReturn recurseScrape(Document root, Elements links) {
         int a, count = 0;
         MyURL newURL;
         Document doc;
@@ -98,6 +105,7 @@ public class MyURLs {
                 links = root.select("a[href]");
                 a = ThreadLocalRandom.current().nextInt(1,links.size()-1);
             }
+
             if (links.get(a).attr("abs:href").length() < 135 && links.get(a).attr("abs:href").length() > 5
                     && links.get(a).attr("abs:href") != null
                     && !links.get(a).attr("abs:href").contains("twitter.com")
@@ -111,14 +119,16 @@ public class MyURLs {
                     && !scrapedURLSContains(links.get(a).attr("abs:href") + "/")
                     && !scrapedURLSContains(links.get(a).attr("abs:href"))) {
                 try {
-                    System.out.println(links.get(a).attr("abs:href"));
                     doc = Jsoup.connect(links.get(a).attr("abs:href")).get();
-                    newURL = new MyURL(links.get(a).attr("abs:href"),urlParent);
-//                    scrapedURLS.add(links.get(a).attr("abs:href"));
+//                    newURL = new MyURL(links.get(a).attr("abs:href"),urlParent);
+                    newURL = new MyURL(links.get(a).attr("abs:href"),"");
                     scrapedURLS.add(newURL);
+                    System.out.println(links.get(a).attr("abs:href"));
                     break;
                 } catch (IOException e) {
-                    return recurseScrape(root, links, root.nodeName());
+                    System.out.println("Caught exception");
+//                    return recurseScrape(root, links, urlParent);
+                    return recurseScrape(root, links);
                 }
             }
             count++;
@@ -131,7 +141,15 @@ public class MyURLs {
 
     //===========================================
     public boolean scrapedURLSContains(String str) {
+        String str1, str2;
         for (MyURL URL : scrapedURLS) {
+            str1 = URL.url.split(":")[1];
+            str2 = str.split(":")[1];
+//            System.out.println(str1);
+//            System.out.println(str2);
+            if (str1.equals(str2)) {
+                return true;
+            }
             if (URL.url.equals(str)) {
                 return true;
             }

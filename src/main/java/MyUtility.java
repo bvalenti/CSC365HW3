@@ -42,9 +42,9 @@ public class MyUtility {
     public static Path getFilePath(String url) {
         if (url.endsWith("/")) {
             url = url.substring(0, url.length() - 1);
-            url = url.replace("//", " ").replace("/", " ").replace(":", "").replace("<", "").replace(">", "").replace("*", "").replace("?", "");
+            url = url.replace("//", " ").replace("/", " ").replace(":", "").replace("<", "").replace(">", "").replace("*", "").replace("?", "").replace("|", "");
         } else {
-            url = url.replace("//", " ").replace("/", " ").replace(":", "").replace("<", "").replace(">", "").replace("*", "").replace("?", "");
+            url = url.replace("//", " ").replace("/", " ").replace(":", "").replace("<", "").replace(">", "").replace("*", "").replace("?", "").replace("|", "");
         }
         url = url + ".ser";
         Path p = Paths.get(BTree.Path, url);
@@ -147,7 +147,7 @@ public class MyUtility {
      */
     public void cacheClusters() throws IOException, ClassNotFoundException {
 //        MyURLs initUrls = MyURLs.getInstance();
-        MyURLs initUrls = new MyURLs();
+        MyURLs initUrls = new MyURLs(true);
         nodeCount = getNodeCount();
         String tmpUrl;
         FrequencyTable freq;
@@ -165,7 +165,7 @@ public class MyUtility {
             System.out.println(cosineSimMetric(medoids[i].medoidFrequencies,medoids[i].medoidFrequencies));
         }
 
-        for (int iteration = 0; iteration < 25; iteration++) { //update medoids for 1000 times or break
+        for (int iteration = 0; iteration < 25; iteration++) {
             System.out.println(iteration);
             medoids = associate(medoids);
 

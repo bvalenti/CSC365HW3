@@ -8,6 +8,7 @@ import java.util.*;
 
 public class Graph {
     HashMap<String, ArrayList<MyConnection>> nodes;
+    SpanningTree shortestPathTree;
     BNode root;
     static long currentmark;
 
@@ -39,7 +40,8 @@ public class Graph {
                 doc = Jsoup.connect(r.keys[i]).get();
                 links = doc.select("a[href]");
                 for (Element element : links) {
-                    if (BTree.searchReturnBool(root, element.attr("abs:href"))) {
+                    boolean contained = false;
+                    if (BTree.searchReturnBool(root, element.attr("abs:href")) && !element.attr("abs:href").equals(r.keys[i])) {
                         MyConnection mc = new MyConnection();
 
                         FrequencyTable c1 = utl.getFrequencyTable(element.attr("abs:href"));
@@ -48,13 +50,23 @@ public class Graph {
                         mc.weight = utl.cosineSimMetric(c1, c2);
                         mc.url = element.attr("abs:href");
                         mc.parent = r.keys[i];
-                        cons.add(mc);
+                        for (MyConnection con : cons) {
+                            if (con.url.split(":")[1].equals(mc.url.split(":")[1]) || mc.url.split(":")[1].equals(r.keys[i].split(":")[1])) {
+                                contained = true;
+                            }
+                        }
+                        if (!contained) {
+                            cons.add(mc);
+                        }
                     }
                 }
+                System.out.println("========================================");
                 System.out.println(r.keys[i]);
-//                for (MyConnection con : cons) {
-//                    System.out.println(con.url);
-//                }
+                System.out.println(links.size());
+                System.out.println(cons.size());
+                for (MyConnection con : cons) {
+                    System.out.println(con.url);
+                }
                 nodes.put(r.keys[i],cons);
             }
         }
@@ -74,16 +86,14 @@ public class Graph {
         MyUtility utl = new MyUtility();
         Medoid medoids[] = utl.readClusters(new Object());
         Path shortestPath = new Path();
-//        double totalDistances[] = new double[10];
 
         WebsiteNode userSelected = new WebsiteNode();
         userSelected.url = src;
         userSelected.connections = nodes.get(src);
-        SpanningTree shortestPathTree = new SpanningTree(userSelected);
-//        shortestPath.pathLength = Double.MAX_VALUE;
+        shortestPathTree = new SpanningTree(userSelected);
 
-        //Use dijkstra's algorithm to find the shortest path spanning tree with the selected
-        // Website as the root node
+        //Use dijkstra's algorithm to find the shortest-path spanning tree with the selected
+        //website as the root node
         shortestPathTree = dijkstra(shortestPathTree);
 
         for (Medoid m : medoids) {
@@ -98,11 +108,11 @@ public class Graph {
             WebsiteNode clusterCenter;
             WebsiteNode nearestClusterCenter = new WebsiteNode();
 
+            System.out.println("Connected clusters: ");
+
             for (String key : clusterCenters) {
                 System.out.println(key);
                 clusterCenter = shortestPathTree.get(key);
-                System.out.println(clusterCenter.url);
-//                System.out.println(clusterCenter.distance);
                 if (clusterCenter.distance < totalDistance) {
                     nearestClusterCenter = clusterCenter;
                     totalDistance = clusterCenter.distance;
