@@ -14,7 +14,6 @@ public class Assignment3_GUI extends javax.swing.JFrame {
 
         public Assignment3_GUI() throws IOException, ClassNotFoundException {
             initComponents();
-            graph.readNodes();
         }
 
         @SuppressWarnings("unchecked")
@@ -32,8 +31,9 @@ public class Assignment3_GUI extends javax.swing.JFrame {
             listSelectionModel.addListSelectionListener(new SharedListSelectionHandler());
 
             jList1.setModel(model);
-
             jButton1 = new javax.swing.JButton();
+            jLabel1 = new javax.swing.JLabel();
+            jButton2 = new javax.swing.JButton();
 
             setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -52,7 +52,21 @@ public class Assignment3_GUI extends javax.swing.JFrame {
                 }
             });
 
+            jButton2.setText("Find Number of Spanning Trees");
+            jButton2.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    try {
+                        jButton2ActionPerformed(evt);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
 
+            jLabel1.setBackground(java.awt.SystemColor.controlLtHighlight);
+            jLabel1.setText(" ");
 
             javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
             getContentPane().setLayout(layout);
@@ -61,16 +75,42 @@ public class Assignment3_GUI extends javax.swing.JFrame {
                             .addComponent(jScrollPane1)
                             .addGroup(layout.createSequentialGroup()
                                     .addComponent(jButton1)
-                                    .addGap(0, 403, Short.MAX_VALUE))
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 224, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addContainerGap())
+                            .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 476, Short.MAX_VALUE)
             );
             layout.setVerticalGroup(
                     layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                    .addContainerGap(136, Short.MAX_VALUE)
-                                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addGap(55, 55, 55)
-                                    .addComponent(jButton1))
+                                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 286, Short.MAX_VALUE)
+                                    .addGap(23, 23, 23)
+                                    .addComponent(jLabel1)
+                                    .addGap(18, 18, 18)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                            .addComponent(jButton1)
+                                            .addComponent(jButton2)))
             );
+
+//            javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+//            getContentPane().setLayout(layout);
+//            layout.setHorizontalGroup(
+//                    layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+//                            .addComponent(jScrollPane1)
+//                            .addGroup(layout.createSequentialGroup()
+//                                    .addComponent(jButton1)
+//                                    .addGap(0, 0, Short.MAX_VALUE))
+//                            .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 476, Short.MAX_VALUE)
+//            );
+//            layout.setVerticalGroup(
+//                    layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+//                            .addGroup(layout.createSequentialGroup()
+//                                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 450, Short.MAX_VALUE)
+//                                    .addGap(23, 23, 23)
+//                                    .addComponent(jLabel1)
+//                                    .addGap(18, 18, 18)
+//                                    .addComponent(jButton1))
+//            );
 
             pack();
         }// </editor-fold>
@@ -107,7 +147,7 @@ public class Assignment3_GUI extends javax.swing.JFrame {
                 public void run() {
                     try {
                         Assignment3_GUI newGUI = new Assignment3_GUI();
-                        newGUI.setSize(Toolkit.getDefaultToolkit().getScreenSize().width/3,Toolkit.getDefaultToolkit().getScreenSize().height/2);
+                        newGUI.setSize(Toolkit.getDefaultToolkit().getScreenSize().width/3,Toolkit.getDefaultToolkit().getScreenSize().height*35/64);
                         newGUI.setVisible(true);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -119,17 +159,30 @@ public class Assignment3_GUI extends javax.swing.JFrame {
         }
 
     public void initListModel(BNode r) throws IOException {
+            int count = 0;
         getStrings(r);
         strings.sort(new CompareStringsLexicographically());
         for (String s : strings) {
-            model.addElement(s);
+            model.addElement(Integer.toString(count) + ". " + s);
+            count++;
         }
     }
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) throws IOException, ClassNotFoundException {
         String url = strings.get(indexSelectedElement);
-        graph.findNearestClusterCenter(url);
-        TreePlotDisplay display = new TreePlotDisplay(graph);
+        graph.readNodes();
+        Path nearestCluster = graph.findNearestClusterCenter(url);
+        jLabel1.setText("Nearest Cluster Center: " + nearestCluster.dst.url);
+        TreePlotDisplay display = new TreePlotDisplay(graph,strings,nearestCluster);
+        ClosestClusterCenterPopup popup = new ClosestClusterCenterPopup(nearestCluster.dst.url);
+    }
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) throws IOException, ClassNotFoundException {
+        String url = strings.get(indexSelectedElement);
+        graph.readNodes();
+        int numberOfSpanningTrees = graph.findNumberOfSpanningTrees();
+        jLabel1.setText("Number of Spanning Trees: " + Integer.toString(numberOfSpanningTrees));
+//        NumberOfSpanningTreesPrompt numberOfSpanningTreesPrompt = new NumberOfSpanningTreesPrompt(graph,strings);
     }
 
     private void getStrings(BNode r) throws IOException {
@@ -150,8 +203,10 @@ public class Assignment3_GUI extends javax.swing.JFrame {
 
     // Variables declaration - do not modify
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
     private javax.swing.JList<String> jList1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel jLabel1;
     // End of variables declaration
 
 
@@ -167,7 +222,6 @@ public class Assignment3_GUI extends javax.swing.JFrame {
 }
 
 class CompareStringsLexicographically implements Comparator<String> {
-
     public int compare(String a, String b) {
         return a.compareToIgnoreCase(b);
     }

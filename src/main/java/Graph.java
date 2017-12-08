@@ -10,7 +10,6 @@ public class Graph {
     HashMap<String, ArrayList<MyConnection>> nodes;
     SpanningTree shortestPathTree;
     BNode root;
-    static long currentmark;
 
     public Graph() throws IOException {
         nodes = new HashMap<>();
@@ -51,7 +50,7 @@ public class Graph {
                         mc.url = element.attr("abs:href");
                         mc.parent = r.keys[i];
                         for (MyConnection con : cons) {
-                            if (con.url.split(":")[1].equals(mc.url.split(":")[1]) || mc.url.split(":")[1].equals(r.keys[i].split(":")[1])) {
+                            if (con.url.split(":")[1].equals(mc.url.split(":")[1])) {
                                 contained = true;
                             }
                         }
@@ -97,7 +96,6 @@ public class Graph {
         shortestPathTree = dijkstra(shortestPathTree);
 
         for (Medoid m : medoids) {
-//            System.out.println(m.key);
             if (shortestPathTree.contains(m.key)) {
                 clusterCenters.add(m.key);
             }
@@ -145,11 +143,7 @@ public class Graph {
         for (int i = 0; i < webNode.connections.size(); i++) {
             webNode.connections.get(i).distance = webNode.distance + (1 - webNode.connections.get(i).weight);
         }
-        for (MyConnection con : spanningTree.root.connections) {
-            System.out.println(con.url);
-            System.out.println(con.parent);
 
-        }
         pq.addAll(spanningTree.root.connections);
         spanningTree.root.visited = true;
         arr.add(spanningTree.root);
@@ -159,6 +153,7 @@ public class Graph {
             mc = pq.remove();
             webNode = new WebsiteNode();
             webNode.url = mc.url;
+            webNode.parentString = mc.parent;
             webNode.connections = nodes.get(mc.url);
             webNode.distance = mc.distance;
             webNode.visited = true;
@@ -245,28 +240,72 @@ public class Graph {
         return spanningTree;
     }
 
-//    //======================================================
-//    public boolean search(WebsiteNode src, WebsiteNode dst) {
-//        long m = ++currentmark;
-//        ArrayDeque<WebsiteNode> stack = new ArrayDeque<>();
-//        stack.addFirst(src);
-//        while (!stack.isEmpty()) {
-//            WebsiteNode e = stack.removeLast();
-//            if (e.marker != m) {
-//                e.marker = m;
-//            }
-//            if (e == dst) {
-//                return true;
-//            }
-//            for (MyConnection s : e.connections) {
-//                WebsiteNode p = new WebsiteNode();
-//                p.url = s.url;
-//                p.connections = nodes.get(s);
-//                stack.addFirst(p);
-//            }
-//        }
-//        return false;
-//    }
+    //======================================================
+    public void addParentConnections() {
+        ArrayList<MyConnection> connectionArray;
+        Iterator it = nodes.keySet().iterator();
+        Iterator itValues;
+        while (it.hasNext()) {
+            int count = 0;
+            String key = (String) it.next();
+            itValues = nodes.values().iterator();
+            while (itValues.hasNext()) {
+                connectionArray = (ArrayList<MyConnection>) itValues.next();
+                for (MyConnection con : connectionArray) {
+                    if (con.url.equals(key)) {
+                        count++;
+                        MyConnection mycon = new MyConnection();
+                        mycon.url = con.parent;
+                        mycon.distance = con.distance;
+                        mycon.weight = con.weight;
+                        mycon.parent = con.url;
+                        nodes.get(key).add(mycon);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    //======================================================
+    public int findNumberOfSpanningTrees() throws IOException, ClassNotFoundException {
+        int num = 0;
+        String url;
+        ArrayList<String> urls = new ArrayList<>();
+
+        for (int i = 0; i < nodes.size(); i++) {
+            url = (String) nodes.keySet().toArray()[i];
+            urls.add(url);
+        }
+        num = recurseFindTrees(num, urls);
+        return num;
+    }
+
+    private int recurseFindTrees(int num, ArrayList<String> urls) throws IOException, ClassNotFoundException {
+        String url = urls.get(0);
+        SpanningTree spanningTree;
+        ArrayList<String> toRemove = new ArrayList<>();
+
+        num++;
+        readNodes();
+        WebsiteNode userSelected = new WebsiteNode();
+        userSelected.url = url;
+        userSelected.connections = nodes.get(url);
+        spanningTree = new SpanningTree(userSelected);
+        spanningTree = dijkstra(spanningTree);
+
+        for (String s : urls) {
+            if (spanningTree.contains(url)) {
+                toRemove.add(s);
+            }
+        }
+        urls.removeAll(toRemove);
+        if (urls.isEmpty()) {
+            return num;
+        } else {
+            return recurseFindTrees(num, urls);
+        }
+    }
 
     //======================================================
     public void writeNodes() throws IOException {

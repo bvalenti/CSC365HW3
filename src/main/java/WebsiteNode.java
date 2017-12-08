@@ -5,6 +5,7 @@ public class WebsiteNode {
     ArrayList<MyConnection> connections = new ArrayList<>();
     ArrayList<WebsiteNode> spanningTreeConnections = new ArrayList<>();
     WebsiteNode parent;
+    String parentString;
     long marker;
     boolean visited;
     double distance;

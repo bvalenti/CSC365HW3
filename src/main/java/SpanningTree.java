@@ -6,10 +6,12 @@ public class SpanningTree {
     }
 
     public boolean contains(String url) {
+        if (root.url.equals(url)) { return true; }
         return search(url, root);
     }
 
     public WebsiteNode get(String url) {
+        if (root.url.equals(url)) { return root; }
         return getNode(url,root);
     }
 
