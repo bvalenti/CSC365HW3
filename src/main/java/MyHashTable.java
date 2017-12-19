@@ -216,7 +216,6 @@ public class MyHashTable implements Serializable {
         for (int i = 0; i < arr.length; i++) {
             e = arr[i];
             while (e != null) {
-//                os.writeChars(e.getKey());
                 os.writeObject(e.getKey());
                 os.writeInt(e.getVal());
                 e = e.getNext();
